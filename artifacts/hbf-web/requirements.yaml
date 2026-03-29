@@ -1,0 +1,19 @@
+packages:
+  "framer-motion": "For page transitions and scroll animations"
+  "zustand": "For global state management (cart and auth)"
+  "react-hook-form": "For form state management"
+  "@hookform/resolvers": "For Zod form validation"
+  "zod": "For form schema validation"
+  "date-fns": "For formatting order dates"
+
+images:
+  - path: "artifacts/hbf-web/public/images/hero-bg.png"
+    description: "Cinematic, mouth-watering spread of gourmet burgers, crispy fried wings, and loaded pizzas on a dark rustic wooden table, dark moody lighting, hyperrealistic, shallow depth of field"
+    aspect_ratio: "16:9"
+  - path: "artifacts/hbf-web/public/images/logo.png"
+    description: "Minimal modern fast food logo featuring the letters HBF in clean bold white and warm yellow typography on a deep maroon/red background"
+    aspect_ratio: "1:1"
+
+notes:
+  - API hooks are imported from @workspace/api-client-react
+  - Authorization headers are passed explicitly to hooks using the token from zustand

@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "HBF Foods - Online Ordering"
+version = "1.0.0"
+id = "artifacts/hbf-web"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20227
+
+[services.development]
+run = "pnpm --filter @workspace/hbf-web run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/hbf-web", "run", "build" ]
+publicDir = "artifacts/hbf-web/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20227"
+BASE_PATH = "/"
