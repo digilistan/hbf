@@ -1,15 +1,19 @@
 import { Router } from "express";
+import type { FlattenMaps, Types } from "mongoose";
 import Category from "../models/Category.js";
 import MenuItem from "../models/MenuItem.js";
+import type { IMenuItem } from "../models/MenuItem.js";
+
+type LeanMenuItem = FlattenMaps<IMenuItem> & { _id: Types.ObjectId };
 
 const router = Router();
 
 router.get("/menu", async (req, res) => {
   try {
     const categories = await Category.find({ isActive: true }).lean();
-    const items = await MenuItem.find({ isActive: true }).lean();
+    const items = await MenuItem.find({ isActive: true }).lean() as LeanMenuItem[];
 
-    const serializeItem = (item: any) => ({
+    const serializeItem = (item: LeanMenuItem) => ({
       _id: item._id.toString(),
       name: item.name,
       category: item.category.toString(),

@@ -1,5 +1,6 @@
 import { AdminLayout } from "@/components/layout/AdminLayout";
-import { useAdminGetItems, useAdminCreateItem, useAdminDeleteItem, useAdminGetCategories } from "@workspace/api-client-react";
+import { useAdminGetItems, useAdminCreateItem, useAdminUpdateItem, useAdminDeleteItem, useAdminGetCategories } from "@workspace/api-client-react";
+import type { MenuItemRequest, MenuItem } from "@workspace/api-client-react";
 import { useAuthStore } from "@/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,30 +9,72 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useForm, Controller } from "react-hook-form";
-import { Trash2, Plus, Flame, Star } from "lucide-react";
+import { Trash2, Plus, Flame, Star, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+
+type ItemFormValues = {
+  name: string;
+  category: string;
+  price: number;
+  description: string;
+  imageUrl: string;
+  isSpicy: boolean;
+  isBestSeller: boolean;
+};
+
+const ITEMS_QK = `/api/admin/items`;
+
+const defaultValues: ItemFormValues = {
+  name: "", category: "", price: 0, description: "", imageUrl: "", isSpicy: false, isBestSeller: false,
+};
+
+const toPayload = (data: ItemFormValues): MenuItemRequest => ({
+  name: data.name,
+  category: data.category,
+  price: Number(data.price),
+  description: data.description || undefined,
+  imageUrl: data.imageUrl || undefined,
+  isBestSeller: data.isBestSeller,
+  isSpicy: data.isSpicy,
+  isActive: true,
+});
 
 export default function AdminItems() {
   const { adminToken } = useAuthStore();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const [editItem, setEditItem] = useState<MenuItem | null>(null);
 
   const reqOptions = { request: { headers: { Authorization: `Bearer ${adminToken}` } } };
 
   const { data: items, isLoading } = useAdminGetItems(reqOptions);
   const { data: categories } = useAdminGetCategories(reqOptions);
 
-  const { mutate: createItem, isPending } = useAdminCreateItem({
+  const addForm = useForm<ItemFormValues>({ defaultValues });
+  const editForm = useForm<ItemFormValues>({ defaultValues });
+
+  const { mutate: createItem, isPending: creating } = useAdminCreateItem({
     ...reqOptions,
     mutation: {
       onSuccess: () => {
         toast({ title: "Item added" });
-        queryClient.invalidateQueries({ queryKey: [`/api/admin/items`] });
-        setOpen(false);
-        reset();
+        queryClient.invalidateQueries({ queryKey: [ITEMS_QK] });
+        setAddOpen(false);
+        addForm.reset(defaultValues);
+      }
+    }
+  });
+
+  const { mutate: updateItem, isPending: updating } = useAdminUpdateItem({
+    ...reqOptions,
+    mutation: {
+      onSuccess: () => {
+        toast({ title: "Item updated" });
+        queryClient.invalidateQueries({ queryKey: [ITEMS_QK] });
+        setEditItem(null);
       }
     }
   });
@@ -41,77 +84,84 @@ export default function AdminItems() {
     mutation: {
       onSuccess: () => {
         toast({ title: "Item deleted" });
-        queryClient.invalidateQueries({ queryKey: [`/api/admin/items`] });
+        queryClient.invalidateQueries({ queryKey: [ITEMS_QK] });
       }
     }
   });
 
-  const { register, handleSubmit, control, reset } = useForm({
-    defaultValues: { name: "", category: "", price: 0, description: "", imageUrl: "", isSpicy: false, isBestSeller: false }
-  });
-
-  const onSubmit = (data: any) => {
-    createItem({ data: { ...data, price: Number(data.price), isActive: true } });
+  const openEdit = (item: MenuItem) => {
+    setEditItem(item);
+    editForm.reset({
+      name: item.name,
+      category: item.category,
+      price: item.price,
+      description: item.description ?? "",
+      imageUrl: item.imageUrl ?? "",
+      isSpicy: item.isSpicy,
+      isBestSeller: item.isBestSeller,
+    });
   };
+
+  const CategorySelect = ({ form }: { form: ReturnType<typeof useForm<ItemFormValues>> }) => (
+    <Controller
+      name="category"
+      control={form.control}
+      rules={{ required: true }}
+      render={({ field }) => (
+        <Select onValueChange={field.onChange} value={field.value}>
+          <SelectTrigger className="rounded-lg"><SelectValue placeholder="Select category..." /></SelectTrigger>
+          <SelectContent>
+            {categories?.map(c => <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      )}
+    />
+  );
 
   return (
     <AdminLayout>
       <div className="mb-8 flex justify-between items-center">
         <h1 className="text-3xl font-display font-black text-foreground">Menu Items</h1>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={addOpen} onOpenChange={setAddOpen}>
           <DialogTrigger asChild>
             <Button className="rounded-xl shadow-lg"><Plus className="w-4 h-4 mr-2" /> Add Item</Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-lg rounded-2xl">
-            <DialogHeader>
-              <DialogTitle>Add Menu Item</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-4">
+            <DialogHeader><DialogTitle>Add Menu Item</DialogTitle></DialogHeader>
+            <form onSubmit={addForm.handleSubmit(v => createItem({ data: toPayload(v) }))} className="space-y-4 mt-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <label className="text-sm font-bold mb-1 block">Name</label>
-                  <Input {...register("name", { required: true })} className="rounded-lg" />
+                  <Input {...addForm.register("name", { required: true })} className="rounded-lg" />
                 </div>
                 <div>
                   <label className="text-sm font-bold mb-1 block">Category</label>
-                  <Controller
-                    name="category"
-                    control={control}
-                    rules={{ required: true }}
-                    render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <SelectTrigger className="rounded-lg"><SelectValue placeholder="Select..." /></SelectTrigger>
-                        <SelectContent>
-                          {categories?.map(c => <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
+                  <CategorySelect form={addForm} />
                 </div>
                 <div>
                   <label className="text-sm font-bold mb-1 block">Price (Rs.)</label>
-                  <Input type="number" {...register("price", { required: true })} className="rounded-lg" />
+                  <Input type="number" {...addForm.register("price", { required: true, valueAsNumber: true })} className="rounded-lg" />
                 </div>
                 <div className="col-span-2">
                   <label className="text-sm font-bold mb-1 block">Description</label>
-                  <Textarea {...register("description")} className="rounded-lg resize-none" />
+                  <Textarea {...addForm.register("description")} className="rounded-lg resize-none" />
                 </div>
                 <div className="col-span-2">
                   <label className="text-sm font-bold mb-1 block">Image URL (optional)</label>
-                  <Input {...register("imageUrl")} className="rounded-lg" placeholder="https://images.unsplash.com/..." />
+                  <Input {...addForm.register("imageUrl")} className="rounded-lg" placeholder="https://images.unsplash.com/..." />
                 </div>
               </div>
               <div className="flex gap-6 py-2">
                 <label className="flex items-center gap-2 font-bold text-sm cursor-pointer">
-                  <Controller name="isSpicy" control={control} render={({field}) => <Switch checked={field.value} onCheckedChange={field.onChange} />} />
+                  <Controller name="isSpicy" control={addForm.control} render={({ field }) => <Switch checked={field.value} onCheckedChange={field.onChange} />} />
                   🌶️ Spicy
                 </label>
                 <label className="flex items-center gap-2 font-bold text-sm cursor-pointer">
-                  <Controller name="isBestSeller" control={control} render={({field}) => <Switch checked={field.value} onCheckedChange={field.onChange} />} />
+                  <Controller name="isBestSeller" control={addForm.control} render={({ field }) => <Switch checked={field.value} onCheckedChange={field.onChange} />} />
                   ⭐ Best Seller
                 </label>
               </div>
-              <Button type="submit" disabled={isPending} className="w-full rounded-xl h-12 text-lg">Save Item</Button>
+              <Button type="submit" disabled={creating} className="w-full rounded-xl h-12 text-lg">Save Item</Button>
             </form>
           </DialogContent>
         </Dialog>
@@ -142,25 +192,71 @@ export default function AdminItems() {
                   )}
                 </td>
                 <td className="px-6 py-4 font-bold">{item.name}</td>
-                <td className="px-6 py-4 text-muted-foreground">{item.categoryName || 'Unknown'}</td>
+                <td className="px-6 py-4 text-muted-foreground">{item.categoryName || "Unknown"}</td>
                 <td className="px-6 py-4 font-bold text-primary">Rs. {item.price}</td>
-                <td className="px-6 py-4 flex gap-2">
-                  {item.isBestSeller && <Star className="w-4 h-4 text-accent fill-accent" />}
-                  {item.isSpicy && <Flame className="w-4 h-4 text-red-500 fill-red-500" />}
+                <td className="px-6 py-4">
+                  <span className="flex gap-2">
+                    {item.isBestSeller && <Star className="w-4 h-4 text-accent fill-accent" />}
+                    {item.isSpicy && <Flame className="w-4 h-4 text-red-500 fill-red-500" />}
+                  </span>
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <Button 
-                    variant="destructive" size="icon" className="h-8 w-8 rounded-lg"
-                    onClick={() => { if(confirm("Delete item?")) deleteItem({ id: item._id }) }}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  <span className="flex justify-end gap-2">
+                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" onClick={() => openEdit(item)}>
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button variant="destructive" size="icon" className="h-8 w-8 rounded-lg"
+                      onClick={() => { if (confirm("Delete this item?")) deleteItem({ id: item._id }); }}>
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </span>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      <Dialog open={!!editItem} onOpenChange={(open) => { if (!open) setEditItem(null); }}>
+        <DialogContent className="sm:max-w-lg rounded-2xl">
+          <DialogHeader><DialogTitle>Edit Menu Item</DialogTitle></DialogHeader>
+          <form onSubmit={editForm.handleSubmit(v => { if (editItem) updateItem({ id: editItem._id, data: toPayload(v) }); })} className="space-y-4 mt-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2">
+                <label className="text-sm font-bold mb-1 block">Name</label>
+                <Input {...editForm.register("name", { required: true })} className="rounded-lg" />
+              </div>
+              <div>
+                <label className="text-sm font-bold mb-1 block">Category</label>
+                <CategorySelect form={editForm} />
+              </div>
+              <div>
+                <label className="text-sm font-bold mb-1 block">Price (Rs.)</label>
+                <Input type="number" {...editForm.register("price", { required: true, valueAsNumber: true })} className="rounded-lg" />
+              </div>
+              <div className="col-span-2">
+                <label className="text-sm font-bold mb-1 block">Description</label>
+                <Textarea {...editForm.register("description")} className="rounded-lg resize-none" />
+              </div>
+              <div className="col-span-2">
+                <label className="text-sm font-bold mb-1 block">Image URL (optional)</label>
+                <Input {...editForm.register("imageUrl")} className="rounded-lg" placeholder="https://images.unsplash.com/..." />
+              </div>
+            </div>
+            <div className="flex gap-6 py-2">
+              <label className="flex items-center gap-2 font-bold text-sm cursor-pointer">
+                <Controller name="isSpicy" control={editForm.control} render={({ field }) => <Switch checked={field.value} onCheckedChange={field.onChange} />} />
+                🌶️ Spicy
+              </label>
+              <label className="flex items-center gap-2 font-bold text-sm cursor-pointer">
+                <Controller name="isBestSeller" control={editForm.control} render={({ field }) => <Switch checked={field.value} onCheckedChange={field.onChange} />} />
+                ⭐ Best Seller
+              </label>
+            </div>
+            <Button type="submit" disabled={updating} className="w-full rounded-xl h-12 text-lg">Save Changes</Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }

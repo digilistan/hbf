@@ -1,17 +1,23 @@
 import { AdminLayout } from "@/components/layout/AdminLayout";
-import { useAdminGetCategories, useAdminCreateCategory, useAdminDeleteCategory } from "@workspace/api-client-react";
+import { useAdminGetCategories, useAdminCreateCategory, useAdminUpdateCategory, useAdminDeleteCategory } from "@workspace/api-client-react";
+import type { CategoryRequest } from "@workspace/api-client-react";
 import { useAuthStore } from "@/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+
+type CategoryFormValues = { name: string; slug: string };
 
 export default function AdminCategories() {
   const { adminToken } = useAuthStore();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [editId, setEditId] = useState<string | null>(null);
 
   const reqOptions = { request: { headers: { Authorization: `Bearer ${adminToken}` } } };
 
@@ -28,6 +34,18 @@ export default function AdminCategories() {
     }
   });
 
+  const { mutate: updateCat, isPending: updating } = useAdminUpdateCategory({
+    ...reqOptions,
+    mutation: {
+      onSuccess: () => {
+        toast({ title: "Category updated" });
+        queryClient.invalidateQueries({ queryKey: [`/api/admin/categories`] });
+        setEditId(null);
+        editReset();
+      }
+    }
+  });
+
   const { mutate: deleteCat } = useAdminDeleteCategory({
     ...reqOptions,
     mutation: {
@@ -38,11 +56,30 @@ export default function AdminCategories() {
     }
   });
 
-  const { register, handleSubmit, reset, watch } = useForm({ defaultValues: { name: "", slug: "" } });
+  const { register, handleSubmit, reset } = useForm<CategoryFormValues>({ defaultValues: { name: "", slug: "" } });
+  const { register: editRegister, handleSubmit: handleEditSubmit, reset: editReset } = useForm<CategoryFormValues>({ defaultValues: { name: "", slug: "" } });
 
-  const onSubmit = (data: any) => {
-    if(!data.slug) data.slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    createCat({ data: { ...data, isActive: true } });
+  const onSubmit = (data: CategoryFormValues) => {
+    const payload: CategoryRequest = {
+      name: data.name,
+      slug: data.slug || data.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+      isActive: true,
+    };
+    createCat({ data: payload });
+  };
+
+  const onEdit = (data: CategoryFormValues) => {
+    if (!editId) return;
+    const payload: CategoryRequest = {
+      name: data.name,
+      slug: data.slug || data.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+    };
+    updateCat({ id: editId, data: payload });
+  };
+
+  const openEdit = (cat: { _id: string; name: string; slug: string }) => {
+    setEditId(cat._id);
+    editReset({ name: cat.name, slug: cat.slug });
   };
 
   return (
@@ -88,10 +125,16 @@ export default function AdminCategories() {
                   <tr key={cat._id} className="border-b last:border-0 hover:bg-muted/30">
                     <td className="px-6 py-4 font-bold">{cat.name}</td>
                     <td className="px-6 py-4 text-muted-foreground font-mono">{cat.slug}</td>
-                    <td className="px-6 py-4 text-right">
-                      <Button 
+                    <td className="px-6 py-4 text-right flex justify-end gap-2">
+                      <Button
+                        variant="outline" size="icon" className="h-8 w-8 rounded-lg"
+                        onClick={() => openEdit(cat)}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button
                         variant="destructive" size="icon" className="h-8 w-8 rounded-lg"
-                        onClick={() => { if(confirm("Delete category?")) deleteCat({ id: cat._id }) }}
+                        onClick={() => { if (confirm("Delete category?")) deleteCat({ id: cat._id }); }}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -103,6 +146,25 @@ export default function AdminCategories() {
           </div>
         </div>
       </div>
+
+      <Dialog open={!!editId} onOpenChange={(open) => { if (!open) setEditId(null); }}>
+        <DialogContent className="sm:max-w-md rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Category</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit(onEdit)} className="space-y-4 mt-4">
+            <div>
+              <label className="text-sm font-bold mb-1 block">Name</label>
+              <Input {...editRegister("name", { required: true })} className="rounded-lg" />
+            </div>
+            <div>
+              <label className="text-sm font-bold mb-1 block">Slug</label>
+              <Input {...editRegister("slug")} className="rounded-lg" />
+            </div>
+            <Button type="submit" disabled={updating} className="w-full rounded-xl h-11">Save Changes</Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }

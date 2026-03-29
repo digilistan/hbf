@@ -2,11 +2,15 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
 const MONGO_URI = process.env["MONGO_URI"];
-const ADMIN_EMAIL = process.env["ADMIN_EMAIL"] || "admin@hbffoods.com";
-const ADMIN_PASSWORD = process.env["ADMIN_PASSWORD"] || "admin123";
+const ADMIN_EMAIL = process.env["ADMIN_EMAIL"];
+const ADMIN_PASSWORD = process.env["ADMIN_PASSWORD"];
 
 if (!MONGO_URI) {
-  console.error("MONGO_URI is not set");
+  console.error("MONGO_URI environment variable is required");
+  process.exit(1);
+}
+if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
+  console.error("ADMIN_EMAIL and ADMIN_PASSWORD environment variables are required");
   process.exit(1);
 }
 

@@ -5,7 +5,10 @@ import AdminUser from "../models/AdminUser.js";
 import Customer from "../models/Customer.js";
 
 const router = Router();
-const JWT_SECRET = process.env["JWT_SECRET"] || "changeme";
+const JWT_SECRET = process.env["JWT_SECRET"];
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET environment variable is required");
+}
 
 router.post("/auth/login", async (req, res) => {
   try {

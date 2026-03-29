@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { OrderItem } from '@workspace/api-client-react';
+import type { OrderItem, Order } from '@workspace/api-client-react';
 
 export interface CartItem extends OrderItem {
   id: string; // internal cart id
@@ -82,9 +82,11 @@ export const useAuthStore = create<AuthState>()(
   )
 );
 
+type PlacedOrder = Order & { guestToken?: string };
+
 interface OrderState {
-  latestOrder: any | null;
-  setLatestOrder: (order: any) => void;
+  latestOrder: PlacedOrder | null;
+  setLatestOrder: (order: PlacedOrder) => void;
 }
 
 export const useOrderStore = create<OrderState>((set) => ({

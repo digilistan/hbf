@@ -255,10 +255,10 @@ router.post("/admin/items", async (req, res) => {
 
 router.put("/admin/items/:id", async (req, res) => {
   try {
-    const { name, category, price, description, isBestSeller, isSpicy, isActive } = req.body;
+    const { name, category, price, description, imageUrl, isBestSeller, isSpicy, isActive } = req.body;
     const item = await MenuItem.findByIdAndUpdate(
       req.params["id"],
-      { name, category, price, description, isBestSeller, isSpicy, isActive },
+      { name, category, price, description, imageUrl, isBestSeller, isSpicy, isActive },
       { new: true }
     ).populate("category", "name").lean();
     if (!item) {
@@ -276,6 +276,7 @@ router.put("/admin/items/:id", async (req, res) => {
         : (item.category as unknown as { name: string }).name,
       price: item.price,
       description: item.description ?? "",
+      imageUrl: item.imageUrl ?? "",
       isBestSeller: item.isBestSeller,
       isSpicy: item.isSpicy,
       isActive: item.isActive,
