@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 const guestCheckoutSchema = z.object({
   customerName: z.string().min(2, "Name is required"),
   customerPhone: z.string().min(10, "Valid phone number required"),
-  customerEmail: z.string().email("Valid email required to create your account"),
+  customerEmail: z.string().email("Invalid email format").optional().or(z.literal("")),
   customerAddress: z.string().min(10, "Full address required"),
   area: z.string().min(2, "Area is required"),
   notes: z.string().optional(),
@@ -117,8 +117,8 @@ export default function Checkout() {
               <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 flex items-start gap-3">
                 <UserPlus className="w-6 h-6 text-blue-600 shrink-0 mt-0.5" />
                 <div>
-                  <h3 className="font-bold text-blue-900 text-sm">Your account will be created automatically</h3>
-                  <p className="text-blue-700 text-xs mt-1">Enter your email and we'll create an account so you can track all your orders easily.</p>
+                  <h3 className="font-bold text-blue-900 text-sm">Add your email to track your order</h3>
+                  <p className="text-blue-700 text-xs mt-1">Email is optional. If you add it, we'll create a free account so you can track all your orders anytime.</p>
                 </div>
               </div>
             )}
@@ -150,7 +150,7 @@ export default function Checkout() {
 
                 <div className="space-y-2">
                   <Label htmlFor="customerEmail">
-                    Email Address {isGuest ? <span className="text-red-500">*</span> : <span className="text-muted-foreground text-xs">(Optional)</span>}
+                    Email Address <span className="text-muted-foreground text-xs">(Optional — for order tracking)</span>
                   </Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-3.5 w-4 h-4 text-muted-foreground" />
