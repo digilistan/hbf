@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type { OrderItem, Order } from '@workspace/api-client-react';
 
 export interface CartItem extends OrderItem {
@@ -82,14 +82,20 @@ export const useAuthStore = create<AuthState>()(
   )
 );
 
-type PlacedOrder = Order & { guestToken?: string };
-
 interface OrderState {
-  latestOrder: PlacedOrder | null;
-  setLatestOrder: (order: PlacedOrder) => void;
+  latestOrder: Order | null;
+  setLatestOrder: (order: Order) => void;
 }
 
-export const useOrderStore = create<OrderState>((set) => ({
-  latestOrder: null,
-  setLatestOrder: (order) => set({ latestOrder: order }),
-}));
+export const useOrderStore = create<OrderState>()(
+  persist(
+    (set) => ({
+      latestOrder: null,
+      setLatestOrder: (order) => set({ latestOrder: order }),
+    }),
+    {
+      name: 'hbf_latest_order',
+      storage: createJSONStorage(() => sessionStorage),
+    }
+  )
+);
