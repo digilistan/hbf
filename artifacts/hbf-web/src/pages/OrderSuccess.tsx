@@ -12,7 +12,7 @@ export default function OrderSuccess() {
   const [, setLocation] = useLocation();
   const [countdown, setCountdown] = useState(5);
 
-  const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || "923159408619";
+  const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER as string;
 
   useEffect(() => {
     if (!latestOrder) {
