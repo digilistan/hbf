@@ -1,0 +1,278 @@
+Here’s a deployment‑ready, copy‑paste MERN prompt you can give to an AI/code assistant inside Replit. It bakes in HBF, your subdomain, and Digilistan context.
+
+Deployment‑ready MERN prompt for HBF (hbffoods.digilistan.com)
+Act as:
+
+Senior Product Manager
+
+Senior MERN Stack Architect
+
+Senior UI/UX Designer (mobile-first)
+
+DevOps engineer (Replit + custom domain)
+
+You are building a production‑ready MVP online ordering website for a restaurant client using the MERN stack, to be deployed on this subdomain:
+
+hbffoods.digilistan.com (mounted on my Digilistan hosting / credits)
+
+I want you to output complete, runnable code and instructions, not just ideas.
+
+1. Business and brand context
+Client: Haq Bahoo Foods – HBF (local fast-food restaurant in Lahore, Pakistan).
+Key facts to reflect in content and structure:
+
+Type: budget‑friendly fast food; burgers, pizzas, wings, fries, rolls, club sandwiches, BBQ, drinks.
+
+Location (text on site): “17 km Ferozepur/Lahore–Kasur Road, near Pak Arab Society, opposite Awan Market, Saroba Garden Housing Society, Lahore, Punjab, Pakistan.”
+
+Phone (text + tel links): 0315-9408619, 0333-9408619, 0300-9408619.
+
+Service: dine-in, takeaway, home delivery in nearby area only (NOT whole Lahore).
+
+Brand tone: affordable, local, friendly, but professional and trust‑building.
+
+Hosting context (Digilistan):
+
+Treat Digilistan as my hosting provider where I have limited credits (usage/quota).
+
+Design with cost efficiency: no heavy extra services, keep stack simple (one Node/Express backend + React frontend).
+
+App must be easy to deploy to a Node environment exposed at hbffoods.digilistan.com (either via reverse proxy or Node app on that host).
+
+All configuration (Mongo URI, JWT secret, admin credentials, base URL, etc.) must be in .env so I can set them in Digilistan’s dashboard.
+
+2. Final product (what should be running on hbffoods.digilistan.com)
+Public visitors (customers) see:
+
+A mobile‑first HBF‑branded ordering website with:
+
+Hero: name “Haq Bahoo Foods – HBF”, tagline about budget zingers/pizzas/wings, address, and prominent “Order Now” button.
+
+Tap‑to‑call button for the main number.
+
+Menu with categories: Burgers, Pizzas, Fries & Sides, Wings & Chicken, Rolls & Sandwiches, BBQ & Special, Drinks.
+
+“Best Sellers” strip at top (e.g., Zinger Burger, Special Pizza, Wings, Loaded Fries, Club Sandwich).
+
+Users can:
+
+Add items to cart.
+
+Open a cart panel/drawer (especially friendly on mobile).
+
+Go to a Checkout page to fill: name, phone, address, area, optional notes.
+
+Place order with Cash on Delivery (only payment method for now).
+
+See an Order Confirmation page with order ID and summary.
+
+HBF staff see:
+
+/admin area with:
+
+Login page (email/password).
+
+Orders list with filters and status (NEW, IN_KITCHEN, OUT_FOR_DELIVERY, COMPLETED, CANCELLED).
+
+Order details with ability to change status.
+
+Menu management (categories and items CRUD).
+
+3. UX / UI requirements
+Mobile‑first, clean, and professional:
+
+Color palette (fast‑food style, in code as theme variables):
+
+Primary: deep red/maroon for header and primary buttons.
+
+Accent: warm yellow/orange for badges and highlights.
+
+Background: dark sections for hero/footer, light neutral for content.
+
+Typography: modern sans‑serif, clear hierarchy, good contrast.
+
+Layout details:
+
+Sticky top navbar with logo/title and “Call” and “Cart” actions.
+
+Category tabs that scroll to each section.
+
+Menu cards: image placeholder, name, short description, price, tags (Spicy, Best Seller).
+
+Cart visible via floating button on mobile.
+
+Checkout form simple and readable.
+
+Text and microcopy should be simple English, optionally with a little local flavor (but keep it neutral, I can localize later).
+
+4. SEO and local presence
+Implement basic SEO as part of the React app (using React Helmet or similar, or static <head> where applicable):
+
+Title: “Haq Bahoo Foods – Online Ordering | Ferozepur Road, Lahore”.
+
+Meta description mentioning burgers, pizzas, wings, fries, affordable prices, location, and online ordering.
+
+Structured content:
+
+<h1> for the brand + location on the home page.
+
+<h2> for sections like “Best Sellers”, “Menu”, “Contact & Location”.
+
+Open Graph tags for share previews (title, description, placeholder image URL).
+
+NAP (Name, Address, Phone) in footer, consistent with above details and referencing Lahore / Ferozepur Road.
+
+Robots‑friendly: a minimal robots.txt that allows indexing, and a basic sitemap.xml for the main public routes (/, /checkout can be optional, /order/:id can be noindex).
+
+5. Technical stack and structure (MERN)
+Use a standard MERN monorepo layout suitable for Replit and Digilistan hosting:
+
+Root
+
+server/ – Node.js + Express API
+
+client/ – React SPA (Vite preferred)
+
+Backend (server)
+Tech: Node.js, Express, Mongoose.
+
+.env variables:
+
+MONGO_URI
+
+JWT_SECRET
+
+ADMIN_EMAIL
+
+ADMIN_PASSWORD
+
+PORT (e.g., 4000)
+
+CLIENT_URL (e.g., https://hbffoods.digilistan.com)
+
+Models: Category, MenuItem, Order, AdminUser with fields:
+
+Category: { name, slug, isActive }
+
+MenuItem: { name, category, price, description, isBestSeller, isSpicy, isActive }
+
+Order: { items, customerName, customerPhone, customerAddress, area, notes, paymentMethod, status, createdAt, updatedAt }
+
+AdminUser: { email, passwordHash, role }
+
+Routes: Public (no auth):
+
+GET /api/menu – grouped categories + items for customer UI.
+
+POST /api/orders – create order; validate required fields.
+
+Auth:
+
+POST /api/auth/login – admin login, returns JWT.
+
+Admin (JWT protected):
+
+GET /api/orders (filter by status optional).
+
+GET /api/orders/:id
+
+PATCH /api/orders/:id/status
+
+GET/POST/PUT/DELETE /api/categories
+
+GET/POST/PUT/DELETE /api/items
+
+Middleware: authMiddleware (JWT), error handler, basic CORS.
+
+Seed script:
+
+Creates default categories & sample items (zinger burger, grilled burger, crispy wings, loaded fries, special pizza, club sandwich, cold drink).
+
+Creates one admin user from .env credentials.
+
+Frontend (client)
+Tech: React + Vite, React Router, Context API for cart and admin auth.
+
+.env for frontend:
+
+VITE_API_BASE_URL (e.g., https://hbffoods.digilistan.com/api)
+
+Pages:
+
+Home – hero, best sellers, menu.
+
+Checkout – cart + customer form.
+
+OrderConfirmation – shows order ID, summary, status placeholder.
+
+AdminLogin
+
+AdminOrders
+
+AdminMenu
+
+Shared layout:
+
+MainLayout with navbar, footer.
+
+AdminLayout.
+
+Components:
+
+Navbar, Hero, CategoryTabs, MenuSection, MenuItemCard, CartDrawer, CheckoutForm, OrderSummary, AdminOrdersTable, AdminOrderDetail, AdminMenuForms.
+
+Cart must be persistent during one browser session (e.g., context + localStorage).
+
+6. Digilistan / deployment considerations
+Design and code everything assuming:
+
+Backend can run on a Node environment provided by Digilistan using my credits.
+
+Frontend can be built and served either:
+
+As static files via a simple static hosting on Digilistan, or
+
+Via Express static middleware after build.
+
+I need:
+
+Production build scripts
+
+"build" scripts for client and production start script for server.
+
+Single command or documented steps to:
+
+Install dependencies for both server and client.
+
+Build client.
+
+Configure server to serve /api and the built React app.
+
+Clear README.md section titled Deployment on Digilistan with:
+
+Required environment variables.
+
+Build commands.
+
+How to bind the app to hbffoods.digilistan.com.
+
+Any reverse proxy assumptions (e.g., Nginx pointing to Node port).
+
+7. Code style and output requirements
+When you respond:
+
+First, briefly restate the architecture and what will be reachable at https://hbffoods.digilistan.com.
+
+Then provide:
+
+Folder structure.
+
+Key server files: Express app, models, routes, controllers (minimal but functional).
+
+Key client files: main entry, routing, main pages, context setup, API helper.
+
+Include sample .env.example for both server and client with Digilistan‑style variables.
+
+Include README.md with clear instructions (development in Replit and production deployment to Digilistan subdomain).
+
+Keep the code clean, production‑ready for an MVP, and do not add extra features beyond the scope above.
