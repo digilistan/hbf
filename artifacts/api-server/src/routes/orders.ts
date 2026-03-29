@@ -22,6 +22,14 @@ router.post("/orders", async (req, res) => {
       return;
     }
 
+    const invalidItems = (items as Array<{ itemId?: unknown; quantity?: unknown }>).filter(
+      (i) => typeof i.itemId !== "string" || !Number.isInteger(i.quantity) || (i.quantity as number) < 1
+    );
+    if (invalidItems.length > 0) {
+      res.status(400).json({ error: "Each item must have a valid itemId and quantity >= 1" });
+      return;
+    }
+
     // Validate items and resolve canonical prices from the database
     const itemIds = (items as Array<{ itemId: string }>).map((i) => i.itemId);
     const menuItems = await MenuItem.find({ _id: { $in: itemIds } }).lean();
