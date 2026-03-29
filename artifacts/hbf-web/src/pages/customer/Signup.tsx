@@ -30,7 +30,8 @@ export default function CustomerSignup() {
         setLocation("/");
       },
       onError: (err) => {
-        toast({ title: "Error", description: err.response?.data?.error || "Registration failed", variant: "destructive" });
+        const errData = err.data as { error?: string } | null;
+        toast({ title: "Error", description: errData?.error ?? "Registration failed", variant: "destructive" });
       }
     }
   });

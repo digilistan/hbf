@@ -29,7 +29,8 @@ export default function CustomerLogin() {
         setLocation("/");
       },
       onError: (err) => {
-        toast({ title: "Error", description: err.response?.data?.error || "Login failed", variant: "destructive" });
+        const errData = err.data as { error?: string } | null;
+        toast({ title: "Error", description: errData?.error ?? "Login failed", variant: "destructive" });
       }
     }
   });

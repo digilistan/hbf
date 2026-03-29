@@ -30,7 +30,8 @@ export default function AdminLogin() {
         setLocation("/admin/orders");
       },
       onError: (err) => {
-        toast({ title: "Login failed", description: err.response?.data?.error || "Invalid credentials", variant: "destructive" });
+        const errData = err.data as { error?: string } | null;
+        toast({ title: "Login failed", description: errData?.error ?? "Invalid credentials", variant: "destructive" });
       }
     }
   });

@@ -24,9 +24,8 @@ export default function AdminOrderDetail() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: order, isLoading } = useAdminGetOrder(id!, {
+  const { data: order, isLoading } = useAdminGetOrder(id ?? "", {
     request: { headers: { Authorization: `Bearer ${adminToken}` } },
-    query: { enabled: !!id }
   });
 
   const { mutate: updateStatus, isPending } = useAdminUpdateOrderStatus({

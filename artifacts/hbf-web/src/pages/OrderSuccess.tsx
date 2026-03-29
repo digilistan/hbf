@@ -1,5 +1,6 @@
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { useOrderStore } from "@/store";
+import type { OrderItem } from "@workspace/api-client-react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, MessageCircle, ArrowLeft } from "lucide-react";
@@ -43,7 +44,7 @@ export default function OrderSuccess() {
     if (latestOrder.notes) msg += `*Notes:* ${latestOrder.notes}\n`;
     
     msg += `\n*Order Items:*\n`;
-    latestOrder.items.forEach((item: any) => {
+    latestOrder.items.forEach((item: OrderItem) => {
       msg += `- ${item.quantity}x ${item.name} (Rs. ${item.price})\n`;
     });
     
@@ -74,7 +75,7 @@ export default function OrderSuccess() {
           <div className="bg-muted/50 rounded-2xl p-6 mb-8 text-left border">
             <h3 className="font-bold text-lg mb-4 border-b pb-2">Summary</h3>
             <div className="space-y-2 mb-4 max-h-40 overflow-y-auto pr-2">
-              {latestOrder.items.map((item: any, i: number) => (
+              {latestOrder.items.map((item: OrderItem, i: number) => (
                 <div key={i} className="flex justify-between text-sm">
                   <span>{item.quantity}x {item.name}</span>
                   <span className="font-medium">Rs. {item.price * item.quantity}</span>

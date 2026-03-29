@@ -1,12 +1,19 @@
 import { Router, Request } from "express";
 import Order from "../models/Order.js";
 import Customer from "../models/Customer.js";
+import AdminUser from "../models/AdminUser.js";
 import { customerAuthMiddleware, CustomerJwtPayload } from "../middleware/auth.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 const router = Router();
-const JWT_SECRET = process.env["JWT_SECRET"] || "changeme";
+
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) throw new Error(`${name} environment variable is required`);
+  return value;
+}
+const JWT_SECRET = requireEnv("JWT_SECRET");
 
 router.post("/orders", async (req, res) => {
   try {
@@ -42,29 +49,34 @@ router.post("/orders", async (req, res) => {
       }
     }
 
-    // Auto-create or find customer account if email provided and not already logged in
+    // Only auto-create a new account for completely new emails.
+    // We must NEVER issue a token for any email that already exists in Customer or AdminUser.
     let guestToken: string | undefined;
     if (!customerId && customerEmail) {
       const emailLower = customerEmail.toLowerCase();
-      let customer = await Customer.findOne({ email: emailLower });
-      if (!customer) {
-        // Create account with a random password — user can set it later
+      const [existingCustomer, existingAdmin] = await Promise.all([
+        Customer.findOne({ email: emailLower }),
+        AdminUser.findOne({ email: emailLower }),
+      ]);
+      if (!existingCustomer && !existingAdmin) {
+        // Truly new email — create a guest account with a random password
+        // (user can claim it later via a password-reset flow)
         const randomPassword = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
         const passwordHash = await bcrypt.hash(randomPassword, 10);
-        const nameParts = customerName.trim().split(" ");
-        const firstName = nameParts[0];
-        customer = await Customer.create({
+        const newCustomer = await Customer.create({
           name: customerName,
           email: emailLower,
           passwordHash,
         });
+        customerId = newCustomer._id.toString();
+        guestToken = jwt.sign(
+          { id: newCustomer._id.toString(), email: newCustomer.email, name: newCustomer.name },
+          JWT_SECRET,
+          { expiresIn: "30d" }
+        );
       }
-      customerId = customer._id.toString();
-      guestToken = jwt.sign(
-        { id: customer._id.toString(), email: customer.email, name: customer.name },
-        JWT_SECRET,
-        { expiresIn: "30d" }
-      );
+      // If the email already exists (as customer or admin), link the order by email
+      // but do NOT issue a token — the user must log in with their credentials.
     }
 
     const order = await Order.create({

@@ -34,7 +34,7 @@ export default function AdminOrders() {
         </div>
       </div>
 
-      <Tabs defaultValue="ALL" onValueChange={(v) => setStatusFilter(v as any)} className="mb-6">
+      <Tabs defaultValue="ALL" onValueChange={(v) => setStatusFilter(v as OrderStatus | "ALL")} className="mb-6">
         <TabsList className="bg-white border shadow-sm p-1 rounded-xl w-full flex overflow-x-auto hide-scrollbar">
           <TabsTrigger value="ALL" className="rounded-lg flex-1">All Orders</TabsTrigger>
           <TabsTrigger value="NEW" className="rounded-lg flex-1">New</TabsTrigger>
