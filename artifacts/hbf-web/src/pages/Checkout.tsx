@@ -105,8 +105,8 @@ export default function Checkout() {
               <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 flex items-start gap-3">
                 <UserPlus className="w-6 h-6 text-blue-600 shrink-0 mt-0.5" />
                 <div>
-                  <h3 className="font-bold text-blue-900 text-sm">Add your email to track your order</h3>
-                  <p className="text-blue-700 text-xs mt-1">Email is optional. If you add it, we'll create a free account so you can track all your orders anytime.</p>
+                  <h3 className="font-bold text-blue-900 text-sm">Want to track your order later?</h3>
+                  <p className="text-blue-700 text-xs mt-1">Email is optional. Create a free account after checkout to view your full order history anytime.</p>
                 </div>
               </div>
             )}

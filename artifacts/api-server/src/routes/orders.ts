@@ -22,11 +22,16 @@ router.post("/orders", async (req, res) => {
       return;
     }
 
-    const invalidItems = (items as Array<{ itemId?: unknown; quantity?: unknown }>).filter(
-      (i) => typeof i.itemId !== "string" || !Number.isInteger(i.quantity) || (i.quantity as number) < 1
+    const invalidItems = (items as Array<{ itemId?: unknown; name?: unknown; quantity?: unknown }>).filter(
+      (i) =>
+        typeof i.itemId !== "string" ||
+        typeof i.name !== "string" ||
+        !i.name ||
+        !Number.isInteger(i.quantity) ||
+        (i.quantity as number) < 1
     );
     if (invalidItems.length > 0) {
-      res.status(400).json({ error: "Each item must have a valid itemId and quantity >= 1" });
+      res.status(400).json({ error: "Each item must have a valid itemId, name, and quantity >= 1" });
       return;
     }
 
