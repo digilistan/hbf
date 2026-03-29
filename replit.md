@@ -35,7 +35,6 @@ Full-stack online ordering website for **Haq Bahoo Foods (HBF)**, a fast-food re
 - Menu browsing by category with **food photos** (Unsplash CDN), Best Seller + Spicy badges
 - **Size variants**: Pizzas (Small 7"/Medium 10"/Large 14"), Fries (Small/Medium/Large), Wings (6/12 pcs), Rolls (Single/Double)
 - Shopping cart (Zustand, persisted to `localStorage` key `hbf_cart`)
-- **Auto account creation** on order placement — guests who provide an email get a JWT token silently
 - Customer signup/login, order history at `/account/orders`
 - WhatsApp order confirmation with pre-filled full order details
 - "Powered by Digilistan" credit in footer
@@ -77,8 +76,8 @@ pnpm --filter @workspace/api-spec run codegen
 
 - **Admin token**: `{ id, email, role: "admin" }` — stored in Zustand + localStorage key `hbf_auth`
 - **Customer token**: `{ id, email, name }` — stored in Zustand + localStorage key `hbf_auth`
-- Guest checkout: if email provided + not authenticated, backend auto-creates Customer and returns `guestToken` in order response
-- Frontend silently stores `guestToken` as customer auth, logging the user in
+- Guest checkout: email is optional; orders placed without a JWT are stored anonymously (no customerId)
+- To view order history, customers must register via `/account` and log in
 
 ## API Routing
 

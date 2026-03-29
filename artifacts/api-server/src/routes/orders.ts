@@ -27,15 +27,19 @@ router.post("/orders", async (req, res) => {
     const menuItems = await MenuItem.find({ _id: { $in: itemIds } }).lean();
     const priceMap = new Map(menuItems.map((m) => [m._id.toString(), m.price]));
 
-    const verifiedItems = (items as Array<{ itemId: string; name: string; quantity: number }>).map(
-      (item) => {
-        const price = priceMap.get(item.itemId);
-        if (price === undefined) {
-          throw new Error(`Item not found: ${item.itemId}`);
-        }
-        return { itemId: item.itemId, name: item.name, price, quantity: item.quantity };
-      }
-    );
+    const typedItems = items as Array<{ itemId: string; name: string; quantity: number }>;
+    const unknownIds = typedItems.filter((i) => !priceMap.has(i.itemId)).map((i) => i.itemId);
+    if (unknownIds.length > 0) {
+      res.status(400).json({ error: `Unknown item IDs: ${unknownIds.join(", ")}` });
+      return;
+    }
+
+    const verifiedItems = typedItems.map((item) => ({
+      itemId: item.itemId,
+      name: item.name,
+      price: priceMap.get(item.itemId)!,
+      quantity: item.quantity,
+    }));
 
     const total = verifiedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 

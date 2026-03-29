@@ -644,8 +644,6 @@ components:
           type: number
         customerId:
           type: string
-        guestToken:
-          type: string
         createdAt:
           type: string
         updatedAt:

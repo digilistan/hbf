@@ -21,7 +21,6 @@ export interface Order {
   status: OrderStatus;
   total: number;
   customerId?: string;
-  guestToken?: string;
   createdAt: string;
   updatedAt?: string;
 }

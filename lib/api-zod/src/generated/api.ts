@@ -143,7 +143,6 @@ export const GetMyOrdersResponseItem = zod.object({
   ]),
   total: zod.number(),
   customerId: zod.string().optional(),
-  guestToken: zod.string().optional(),
   createdAt: zod.string(),
   updatedAt: zod.string().optional(),
 });
@@ -184,7 +183,6 @@ export const AdminGetOrdersResponseItem = zod.object({
   ]),
   total: zod.number(),
   customerId: zod.string().optional(),
-  guestToken: zod.string().optional(),
   createdAt: zod.string(),
   updatedAt: zod.string().optional(),
 });
@@ -223,7 +221,6 @@ export const AdminGetOrderResponse = zod.object({
   ]),
   total: zod.number(),
   customerId: zod.string().optional(),
-  guestToken: zod.string().optional(),
   createdAt: zod.string(),
   updatedAt: zod.string().optional(),
 });
@@ -271,7 +268,6 @@ export const AdminUpdateOrderStatusResponse = zod.object({
   ]),
   total: zod.number(),
   customerId: zod.string().optional(),
-  guestToken: zod.string().optional(),
   createdAt: zod.string(),
   updatedAt: zod.string().optional(),
 });
