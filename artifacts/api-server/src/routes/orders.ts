@@ -71,10 +71,9 @@ router.post("/orders", async (req, res) => {
     }
 
     // ---------------------------------------------------------
-    // If no token: check email against known accounts.
-    // - NEW email  → create customer account + issue guestToken
-    // - EXISTING customer email → link order to their account (no token)
-    // - EXISTING admin email → no customerId, no token (security)
+    // If no token: only auto-create an account for brand-new emails.
+    // Existing accounts (Customer or AdminUser) are never touched here —
+    // those users must authenticate via /customers/login to get a token.
     // ---------------------------------------------------------
     let guestToken: string | undefined;
     if (!customerId && customerEmail) {
@@ -84,11 +83,8 @@ router.post("/orders", async (req, res) => {
         AdminUser.findOne({ email: emailLower }),
       ]);
 
-      if (existingCustomer) {
-        // Link to existing customer — do NOT issue a token without credential verification
-        customerId = existingCustomer._id.toString();
-      } else if (!existingAdmin) {
-        // Truly new email — auto-create account and issue a one-time guest token
+      if (!existingCustomer && !existingAdmin) {
+        // Brand-new email: auto-create guest account per "auto-get one on checkout" spec
         const randomPassword =
           Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
         const passwordHash = await bcrypt.hash(randomPassword, 10);
@@ -104,7 +100,8 @@ router.post("/orders", async (req, res) => {
           { expiresIn: "30d" }
         );
       }
-      // If existingAdmin → no customerId, no token
+      // Existing customer or admin email → order stored with email only, no customerId.
+      // The real user must log in via /customers/login to view their orders.
     }
 
     const order = await Order.create({
