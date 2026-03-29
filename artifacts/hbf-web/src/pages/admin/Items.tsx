@@ -1,5 +1,5 @@
 import { AdminLayout } from "@/components/layout/AdminLayout";
-import { useAdminGetItems, useAdminCreateItem, useAdminUpdateItem, useAdminDeleteItem, useAdminGetCategories } from "@workspace/api-client-react";
+import { useAdminGetItems, useAdminCreateItem, useAdminUpdateItem, useAdminDeleteItem, useAdminGetCategories, getAdminGetItemsQueryKey } from "@workspace/api-client-react";
 import type { MenuItemRequest, MenuItem } from "@workspace/api-client-react";
 import { useAuthStore } from "@/store";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,6 @@ type ItemFormValues = {
   isBestSeller: boolean;
 };
 
-const ITEMS_QK = `/api/admin/items`;
 
 const defaultValues: ItemFormValues = {
   name: "", category: "", price: 0, description: "", imageUrl: "", isSpicy: false, isBestSeller: false,
@@ -61,7 +60,7 @@ export default function AdminItems() {
     mutation: {
       onSuccess: () => {
         toast({ title: "Item added" });
-        queryClient.invalidateQueries({ queryKey: [ITEMS_QK] });
+        queryClient.invalidateQueries({ queryKey: getAdminGetItemsQueryKey() });
         setAddOpen(false);
         addForm.reset(defaultValues);
       }
@@ -73,7 +72,7 @@ export default function AdminItems() {
     mutation: {
       onSuccess: () => {
         toast({ title: "Item updated" });
-        queryClient.invalidateQueries({ queryKey: [ITEMS_QK] });
+        queryClient.invalidateQueries({ queryKey: getAdminGetItemsQueryKey() });
         setEditItem(null);
       }
     }
@@ -84,7 +83,7 @@ export default function AdminItems() {
     mutation: {
       onSuccess: () => {
         toast({ title: "Item deleted" });
-        queryClient.invalidateQueries({ queryKey: [ITEMS_QK] });
+        queryClient.invalidateQueries({ queryKey: getAdminGetItemsQueryKey() });
       }
     }
   });

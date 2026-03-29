@@ -1,5 +1,5 @@
 import { AdminLayout } from "@/components/layout/AdminLayout";
-import { useAdminGetCategories, useAdminCreateCategory, useAdminUpdateCategory, useAdminDeleteCategory } from "@workspace/api-client-react";
+import { useAdminGetCategories, useAdminCreateCategory, useAdminUpdateCategory, useAdminDeleteCategory, getAdminGetCategoriesQueryKey } from "@workspace/api-client-react";
 import type { CategoryRequest } from "@workspace/api-client-react";
 import { useAuthStore } from "@/store";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,7 @@ export default function AdminCategories() {
     mutation: {
       onSuccess: () => {
         toast({ title: "Category added" });
-        queryClient.invalidateQueries({ queryKey: [`/api/admin/categories`] });
+        queryClient.invalidateQueries({ queryKey: getAdminGetCategoriesQueryKey() });
         reset();
       }
     }
@@ -39,7 +39,7 @@ export default function AdminCategories() {
     mutation: {
       onSuccess: () => {
         toast({ title: "Category updated" });
-        queryClient.invalidateQueries({ queryKey: [`/api/admin/categories`] });
+        queryClient.invalidateQueries({ queryKey: getAdminGetCategoriesQueryKey() });
         setEditId(null);
         editReset();
       }
@@ -51,7 +51,7 @@ export default function AdminCategories() {
     mutation: {
       onSuccess: () => {
         toast({ title: "Category deleted" });
-        queryClient.invalidateQueries({ queryKey: [`/api/admin/categories`] });
+        queryClient.invalidateQueries({ queryKey: getAdminGetCategoriesQueryKey() });
       }
     }
   });

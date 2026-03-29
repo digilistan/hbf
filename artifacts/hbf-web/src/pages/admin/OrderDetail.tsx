@@ -1,5 +1,5 @@
 import { AdminLayout } from "@/components/layout/AdminLayout";
-import { useAdminGetOrder, useAdminUpdateOrderStatus, OrderStatus } from "@workspace/api-client-react";
+import { useAdminGetOrder, useAdminUpdateOrderStatus, OrderStatus, getAdminGetOrderQueryKey, getAdminGetOrdersQueryKey } from "@workspace/api-client-react";
 import { useAuthStore } from "@/store";
 import { useParams, Link } from "wouter";
 import { format } from "date-fns";
@@ -33,8 +33,8 @@ export default function AdminOrderDetail() {
     mutation: {
       onSuccess: () => {
         toast({ title: "Status updated successfully" });
-        queryClient.invalidateQueries({ queryKey: [`/api/admin/orders/${id}`] });
-        queryClient.invalidateQueries({ queryKey: [`/api/admin/orders`] });
+        queryClient.invalidateQueries({ queryKey: getAdminGetOrderQueryKey(id!) });
+        queryClient.invalidateQueries({ queryKey: getAdminGetOrdersQueryKey() });
       },
       onError: () => toast({ title: "Failed to update status", variant: "destructive" })
     }

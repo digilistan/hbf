@@ -53,8 +53,7 @@ Full-stack online ordering website for **Haq Bahoo Foods (HBF)**, a fast-food re
 | `JWT_SECRET` | Customer + Admin JWT signing |
 | `ADMIN_EMAIL` | Seeded admin account email |
 | `ADMIN_PASSWORD` | Seeded admin account password |
-| `WHATSAPP_NUMBER` | WhatsApp redirect (format: 923XXXXXXXXX) |
-| `VITE_WHATSAPP_NUMBER` | Frontend WhatsApp button |
+| `VITE_WHATSAPP_NUMBER` | Frontend WhatsApp redirect button (format: 923XXXXXXXXX) |
 
 ## Development
 
