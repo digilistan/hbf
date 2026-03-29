@@ -35,13 +35,14 @@ type CheckoutForm = z.infer<typeof guestCheckoutSchema>;
 export default function Checkout() {
   const { items, getTotal, clearCart } = useCartStore();
   const { setLatestOrder } = useOrderStore();
-  const { customerUser, setCustomerAuth } = useAuthStore();
+  const { customerUser, customerToken, setCustomerAuth } = useAuthStore();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
   const isGuest = !customerUser;
 
   const { mutate: createOrder, isPending } = useCreateOrder({
+    ...(customerToken ? { request: { headers: { Authorization: `Bearer ${customerToken}` } } } : {}),
     mutation: {
       onSuccess: (data) => {
         // If the backend created a guest account, auto-login

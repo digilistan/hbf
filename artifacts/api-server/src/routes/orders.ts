@@ -2,6 +2,7 @@ import { Router, Request } from "express";
 import Order from "../models/Order.js";
 import Customer from "../models/Customer.js";
 import AdminUser from "../models/AdminUser.js";
+import MenuItem from "../models/MenuItem.js";
 import { customerAuthMiddleware, CustomerJwtPayload } from "../middleware/auth.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -29,12 +30,32 @@ router.post("/orders", async (req, res) => {
       return;
     }
 
-    const total = items.reduce(
-      (sum: number, item: { price: number; quantity: number }) => sum + item.price * item.quantity,
+    // ---------------------------------------------------------
+    // Server-side price integrity: look up canonical prices from
+    // the database so the client cannot manipulate totals.
+    // ---------------------------------------------------------
+    const itemIds: string[] = (items as Array<{ itemId: string }>).map((i) => i.itemId);
+    const menuItems = await MenuItem.find({ _id: { $in: itemIds } }).lean();
+    const priceMap = new Map(menuItems.map((m) => [m._id.toString(), m.price]));
+
+    const verifiedItems = (items as Array<{ itemId: string; name: string; quantity: number }>).map(
+      (item) => {
+        const canonicalPrice = priceMap.get(item.itemId);
+        if (canonicalPrice === undefined) {
+          throw new Error(`Item not found: ${item.itemId}`);
+        }
+        return { itemId: item.itemId, name: item.name, price: canonicalPrice, quantity: item.quantity };
+      }
+    );
+
+    const total = verifiedItems.reduce(
+      (sum, item) => sum + item.price * item.quantity,
       0
     );
 
-    // Try to get customerId from auth token
+    // ---------------------------------------------------------
+    // Determine customerId from bearer token (logged-in user)
+    // ---------------------------------------------------------
     const authHeader = req.headers.authorization;
     let customerId: string | undefined;
     if (authHeader?.startsWith("Bearer ")) {
@@ -45,12 +66,16 @@ router.post("/orders", async (req, res) => {
         ) as CustomerJwtPayload;
         customerId = payload.id;
       } catch {
-        // not authenticated, that's fine
+        // token invalid or expired — treat as unauthenticated
       }
     }
 
-    // Only auto-create a new account for completely new emails.
-    // We must NEVER issue a token for any email that already exists in Customer or AdminUser.
+    // ---------------------------------------------------------
+    // If no token: check email against known accounts.
+    // - NEW email  → create customer account + issue guestToken
+    // - EXISTING customer email → link order to their account (no token)
+    // - EXISTING admin email → no customerId, no token (security)
+    // ---------------------------------------------------------
     let guestToken: string | undefined;
     if (!customerId && customerEmail) {
       const emailLower = customerEmail.toLowerCase();
@@ -58,10 +83,14 @@ router.post("/orders", async (req, res) => {
         Customer.findOne({ email: emailLower }),
         AdminUser.findOne({ email: emailLower }),
       ]);
-      if (!existingCustomer && !existingAdmin) {
-        // Truly new email — create a guest account with a random password
-        // (user can claim it later via a password-reset flow)
-        const randomPassword = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+
+      if (existingCustomer) {
+        // Link to existing customer — do NOT issue a token without credential verification
+        customerId = existingCustomer._id.toString();
+      } else if (!existingAdmin) {
+        // Truly new email — auto-create account and issue a one-time guest token
+        const randomPassword =
+          Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
         const passwordHash = await bcrypt.hash(randomPassword, 10);
         const newCustomer = await Customer.create({
           name: customerName,
@@ -75,12 +104,11 @@ router.post("/orders", async (req, res) => {
           { expiresIn: "30d" }
         );
       }
-      // If the email already exists (as customer or admin), link the order by email
-      // but do NOT issue a token — the user must log in with their credentials.
+      // If existingAdmin → no customerId, no token
     }
 
     const order = await Order.create({
-      items,
+      items: verifiedItems,
       customerName,
       customerPhone,
       customerEmail,

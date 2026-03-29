@@ -36,10 +36,12 @@ export default function AdminOrders() {
 
       <Tabs defaultValue="ALL" onValueChange={(v) => setStatusFilter(v as OrderStatus | "ALL")} className="mb-6">
         <TabsList className="bg-white border shadow-sm p-1 rounded-xl w-full flex overflow-x-auto hide-scrollbar">
-          <TabsTrigger value="ALL" className="rounded-lg flex-1">All Orders</TabsTrigger>
+          <TabsTrigger value="ALL" className="rounded-lg flex-1">All</TabsTrigger>
           <TabsTrigger value="NEW" className="rounded-lg flex-1">New</TabsTrigger>
           <TabsTrigger value="IN_KITCHEN" className="rounded-lg flex-1">In Kitchen</TabsTrigger>
-          <TabsTrigger value="OUT_FOR_DELIVERY" className="rounded-lg flex-1">Out For Delivery</TabsTrigger>
+          <TabsTrigger value="OUT_FOR_DELIVERY" className="rounded-lg flex-1">Delivery</TabsTrigger>
+          <TabsTrigger value="COMPLETED" className="rounded-lg flex-1">Completed</TabsTrigger>
+          <TabsTrigger value="CANCELLED" className="rounded-lg flex-1">Cancelled</TabsTrigger>
         </TabsList>
       </Tabs>
 
