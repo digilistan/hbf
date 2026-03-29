@@ -525,6 +525,8 @@ components:
           type: number
         description:
           type: string
+        imageUrl:
+          type: string
         isBestSeller:
           type: boolean
         isSpicy:
@@ -548,6 +550,8 @@ components:
         price:
           type: number
         description:
+          type: string
+        imageUrl:
           type: string
         isBestSeller:
           type: boolean
@@ -639,6 +643,8 @@ components:
         total:
           type: number
         customerId:
+          type: string
+        guestToken:
           type: string
         createdAt:
           type: string

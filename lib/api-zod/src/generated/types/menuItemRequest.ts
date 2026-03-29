@@ -11,6 +11,7 @@ export interface MenuItemRequest {
   category: string;
   price: number;
   description?: string;
+  imageUrl?: string;
   isBestSeller?: boolean;
   isSpicy?: boolean;
   isActive?: boolean;

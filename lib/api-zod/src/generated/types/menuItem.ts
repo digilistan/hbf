@@ -13,6 +13,7 @@ export interface MenuItem {
   categoryName?: string;
   price: number;
   description?: string;
+  imageUrl?: string;
   isBestSeller?: boolean;
   isSpicy?: boolean;
   isActive: boolean;

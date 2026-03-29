@@ -135,8 +135,16 @@ export function PublicLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 pt-8 border-t border-white/10 text-center text-gray-500 text-sm">
-          &copy; {new Date().getFullYear()} Haq Bahoo Foods (HBF). All rights reserved.
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm">
+          <p className="text-gray-500">&copy; {new Date().getFullYear()} Haq Bahoo Foods (HBF). All rights reserved.</p>
+          <a
+            href="https://digilistan.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gray-600 hover:text-gray-400 transition-colors text-xs font-medium tracking-wide"
+          >
+            Powered by <span className="text-primary font-bold">Digilistan</span>
+          </a>
         </div>
       </footer>
 

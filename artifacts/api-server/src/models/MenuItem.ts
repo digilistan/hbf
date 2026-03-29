@@ -5,6 +5,7 @@ export interface IMenuItem extends Document {
   category: mongoose.Types.ObjectId;
   price: number;
   description?: string;
+  imageUrl?: string;
   isBestSeller: boolean;
   isSpicy: boolean;
   isActive: boolean;
@@ -16,6 +17,7 @@ const MenuItemSchema = new Schema<IMenuItem>(
     category: { type: Schema.Types.ObjectId, ref: "Category", required: true },
     price: { type: Number, required: true, min: 0 },
     description: { type: String, trim: true },
+    imageUrl: { type: String, trim: true },
     isBestSeller: { type: Boolean, default: false },
     isSpicy: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },

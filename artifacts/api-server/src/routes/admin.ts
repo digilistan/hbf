@@ -203,6 +203,7 @@ router.get("/admin/items", async (req, res) => {
           : (item.category as unknown as { name: string }).name,
         price: item.price,
         description: item.description ?? "",
+        imageUrl: item.imageUrl ?? "",
         isBestSeller: item.isBestSeller,
         isSpicy: item.isSpicy,
         isActive: item.isActive,
@@ -216,7 +217,7 @@ router.get("/admin/items", async (req, res) => {
 
 router.post("/admin/items", async (req, res) => {
   try {
-    const { name, category, price, description, isBestSeller, isSpicy, isActive } = req.body;
+    const { name, category, price, description, imageUrl, isBestSeller, isSpicy, isActive } = req.body;
     if (!name || !category || price === undefined) {
       res.status(400).json({ error: "Name, category, and price are required" });
       return;
@@ -226,6 +227,7 @@ router.post("/admin/items", async (req, res) => {
       category,
       price,
       description,
+      imageUrl,
       isBestSeller: isBestSeller ?? false,
       isSpicy: isSpicy ?? false,
       isActive: isActive ?? true,
@@ -240,6 +242,7 @@ router.post("/admin/items", async (req, res) => {
         : (populated?.category as unknown as { name: string })?.name ?? "",
       price: item.price,
       description: item.description ?? "",
+      imageUrl: item.imageUrl ?? "",
       isBestSeller: item.isBestSeller,
       isSpicy: item.isSpicy,
       isActive: item.isActive,

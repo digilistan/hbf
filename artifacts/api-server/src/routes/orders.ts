@@ -1,8 +1,12 @@
 import { Router, Request } from "express";
 import Order from "../models/Order.js";
+import Customer from "../models/Customer.js";
 import { customerAuthMiddleware, CustomerJwtPayload } from "../middleware/auth.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 const router = Router();
+const JWT_SECRET = process.env["JWT_SECRET"] || "changeme";
 
 router.post("/orders", async (req, res) => {
   try {
@@ -23,19 +27,44 @@ router.post("/orders", async (req, res) => {
       0
     );
 
+    // Try to get customerId from auth token
     const authHeader = req.headers.authorization;
     let customerId: string | undefined;
     if (authHeader?.startsWith("Bearer ")) {
       try {
-        const jwt = await import("jsonwebtoken");
-        const payload = jwt.default.verify(
+        const payload = jwt.verify(
           authHeader.slice(7),
-          process.env["JWT_SECRET"] || "changeme"
+          JWT_SECRET
         ) as CustomerJwtPayload;
         customerId = payload.id;
       } catch {
         // not authenticated, that's fine
       }
+    }
+
+    // Auto-create or find customer account if email provided and not already logged in
+    let guestToken: string | undefined;
+    if (!customerId && customerEmail) {
+      const emailLower = customerEmail.toLowerCase();
+      let customer = await Customer.findOne({ email: emailLower });
+      if (!customer) {
+        // Create account with a random password — user can set it later
+        const randomPassword = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+        const passwordHash = await bcrypt.hash(randomPassword, 10);
+        const nameParts = customerName.trim().split(" ");
+        const firstName = nameParts[0];
+        customer = await Customer.create({
+          name: customerName,
+          email: emailLower,
+          passwordHash,
+        });
+      }
+      customerId = customer._id.toString();
+      guestToken = jwt.sign(
+        { id: customer._id.toString(), email: customer.email, name: customer.name },
+        JWT_SECRET,
+        { expiresIn: "30d" }
+      );
     }
 
     const order = await Order.create({
@@ -64,6 +93,7 @@ router.post("/orders", async (req, res) => {
       total: order.total,
       customerId: order.customerId?.toString(),
       createdAt: (order as unknown as { createdAt: Date }).createdAt.toISOString(),
+      ...(guestToken ? { guestToken } : {}),
     });
   } catch (err) {
     req.log.error({ err }, "Failed to create order");

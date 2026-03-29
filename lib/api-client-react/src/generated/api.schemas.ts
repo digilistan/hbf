@@ -47,6 +47,7 @@ export interface MenuItem {
   categoryName?: string;
   price: number;
   description?: string;
+  imageUrl?: string;
   isBestSeller?: boolean;
   isSpicy?: boolean;
   isActive: boolean;
@@ -57,6 +58,7 @@ export interface MenuItemRequest {
   category: string;
   price: number;
   description?: string;
+  imageUrl?: string;
   isBestSeller?: boolean;
   isSpicy?: boolean;
   isActive?: boolean;
@@ -94,6 +96,7 @@ export interface Order {
   status: OrderStatus;
   total: number;
   customerId?: string;
+  guestToken?: string;
   createdAt: string;
   updatedAt?: string;
 }

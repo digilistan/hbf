@@ -69,6 +69,9 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           >
             <LogOut className="w-4 h-4 mr-2" /> Logout
           </Button>
+          <p className="text-center text-gray-700 text-[10px] mt-3">
+            Powered by <a href="https://digilistan.com" target="_blank" rel="noopener noreferrer" className="text-primary/60 font-semibold hover:text-primary transition-colors">Digilistan</a>
+          </p>
         </div>
       </aside>
 

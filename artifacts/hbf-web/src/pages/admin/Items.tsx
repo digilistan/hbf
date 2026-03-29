@@ -47,7 +47,7 @@ export default function AdminItems() {
   });
 
   const { register, handleSubmit, control, reset } = useForm({
-    defaultValues: { name: "", category: "", price: 0, description: "", isSpicy: false, isBestSeller: false }
+    defaultValues: { name: "", category: "", price: 0, description: "", imageUrl: "", isSpicy: false, isBestSeller: false }
   });
 
   const onSubmit = (data: any) => {
@@ -96,6 +96,10 @@ export default function AdminItems() {
                   <label className="text-sm font-bold mb-1 block">Description</label>
                   <Textarea {...register("description")} className="rounded-lg resize-none" />
                 </div>
+                <div className="col-span-2">
+                  <label className="text-sm font-bold mb-1 block">Image URL (optional)</label>
+                  <Input {...register("imageUrl")} className="rounded-lg" placeholder="https://images.unsplash.com/..." />
+                </div>
               </div>
               <div className="flex gap-6 py-2">
                 <label className="flex items-center gap-2 font-bold text-sm cursor-pointer">
@@ -117,6 +121,7 @@ export default function AdminItems() {
         <table className="w-full text-sm text-left">
           <thead className="bg-muted/50 text-muted-foreground uppercase font-bold text-xs">
             <tr>
+              <th className="px-4 py-4 w-14"></th>
               <th className="px-6 py-4">Name</th>
               <th className="px-6 py-4">Category</th>
               <th className="px-6 py-4">Price</th>
@@ -126,9 +131,16 @@ export default function AdminItems() {
           </thead>
           <tbody>
             {isLoading ? (
-              <tr><td colSpan={5} className="p-8 text-center">Loading...</td></tr>
+              <tr><td colSpan={6} className="p-8 text-center">Loading...</td></tr>
             ) : items?.map((item) => (
               <tr key={item._id} className="border-b last:border-0 hover:bg-muted/30">
+                <td className="px-4 py-3">
+                  {item.imageUrl ? (
+                    <img src={item.imageUrl} alt={item.name} className="w-10 h-10 rounded-lg object-cover" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-muted-foreground text-xs">No img</div>
+                  )}
+                </td>
                 <td className="px-6 py-4 font-bold">{item.name}</td>
                 <td className="px-6 py-4 text-muted-foreground">{item.categoryName || 'Unknown'}</td>
                 <td className="px-6 py-4 font-bold text-primary">Rs. {item.price}</td>
