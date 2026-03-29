@@ -1,20 +1,12 @@
 import { Router, Request } from "express";
+import jwt from "jsonwebtoken";
 import Order from "../models/Order.js";
-import Customer from "../models/Customer.js";
-import AdminUser from "../models/AdminUser.js";
 import MenuItem from "../models/MenuItem.js";
 import { customerAuthMiddleware, CustomerJwtPayload } from "../middleware/auth.js";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 
 const router = Router();
 
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) throw new Error(`${name} environment variable is required`);
-  return value;
-}
-const JWT_SECRET = requireEnv("JWT_SECRET");
+const JWT_SECRET = process.env.JWT_SECRET!;
 
 router.post("/orders", async (req, res) => {
   try {
@@ -30,78 +22,33 @@ router.post("/orders", async (req, res) => {
       return;
     }
 
-    // ---------------------------------------------------------
-    // Server-side price integrity: look up canonical prices from
-    // the database so the client cannot manipulate totals.
-    // ---------------------------------------------------------
-    const itemIds: string[] = (items as Array<{ itemId: string }>).map((i) => i.itemId);
+    // Validate items and resolve canonical prices from the database
+    const itemIds = (items as Array<{ itemId: string }>).map((i) => i.itemId);
     const menuItems = await MenuItem.find({ _id: { $in: itemIds } }).lean();
     const priceMap = new Map(menuItems.map((m) => [m._id.toString(), m.price]));
 
     const verifiedItems = (items as Array<{ itemId: string; name: string; quantity: number }>).map(
       (item) => {
-        const canonicalPrice = priceMap.get(item.itemId);
-        if (canonicalPrice === undefined) {
+        const price = priceMap.get(item.itemId);
+        if (price === undefined) {
           throw new Error(`Item not found: ${item.itemId}`);
         }
-        return { itemId: item.itemId, name: item.name, price: canonicalPrice, quantity: item.quantity };
+        return { itemId: item.itemId, name: item.name, price, quantity: item.quantity };
       }
     );
 
-    const total = verifiedItems.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
+    const total = verifiedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-    // ---------------------------------------------------------
-    // Determine customerId from bearer token (logged-in user)
-    // ---------------------------------------------------------
+    // Resolve customerId from bearer token when the customer is logged in
     const authHeader = req.headers.authorization;
     let customerId: string | undefined;
     if (authHeader?.startsWith("Bearer ")) {
       try {
-        const payload = jwt.verify(
-          authHeader.slice(7),
-          JWT_SECRET
-        ) as CustomerJwtPayload;
+        const payload = jwt.verify(authHeader.slice(7), JWT_SECRET) as CustomerJwtPayload;
         customerId = payload.id;
       } catch {
-        // token invalid or expired — treat as unauthenticated
+        // Invalid or expired token — treat request as unauthenticated
       }
-    }
-
-    // ---------------------------------------------------------
-    // If no token: only auto-create an account for brand-new emails.
-    // Existing accounts (Customer or AdminUser) are never touched here —
-    // those users must authenticate via /customers/login to get a token.
-    // ---------------------------------------------------------
-    let guestToken: string | undefined;
-    if (!customerId && customerEmail) {
-      const emailLower = customerEmail.toLowerCase();
-      const [existingCustomer, existingAdmin] = await Promise.all([
-        Customer.findOne({ email: emailLower }),
-        AdminUser.findOne({ email: emailLower }),
-      ]);
-
-      if (!existingCustomer && !existingAdmin) {
-        // Brand-new email: auto-create guest account per "auto-get one on checkout" spec
-        const randomPassword =
-          Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
-        const passwordHash = await bcrypt.hash(randomPassword, 10);
-        const newCustomer = await Customer.create({
-          name: customerName,
-          email: emailLower,
-          passwordHash,
-        });
-        customerId = newCustomer._id.toString();
-        guestToken = jwt.sign(
-          { id: newCustomer._id.toString(), email: newCustomer.email, name: newCustomer.name },
-          JWT_SECRET,
-          { expiresIn: "30d" }
-        );
-      }
-      // Existing customer or admin email → order stored with email only, no customerId.
-      // The real user must log in via /customers/login to view their orders.
     }
 
     const order = await Order.create({
@@ -130,7 +77,6 @@ router.post("/orders", async (req, res) => {
       total: order.total,
       customerId: order.customerId?.toString(),
       createdAt: (order as unknown as { createdAt: Date }).createdAt.toISOString(),
-      ...(guestToken ? { guestToken } : {}),
     });
   } catch (err) {
     req.log.error({ err }, "Failed to create order");
@@ -145,7 +91,6 @@ router.get(
     try {
       const customer = req.customer!;
       const orders = await Order.find({ customerId: customer.id }).sort({ createdAt: -1 }).lean();
-
       res.json(
         orders.map((order) => ({
           _id: order._id.toString(),

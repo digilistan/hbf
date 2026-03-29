@@ -35,7 +35,7 @@ type CheckoutForm = z.infer<typeof guestCheckoutSchema>;
 export default function Checkout() {
   const { items, getTotal, clearCart } = useCartStore();
   const { setLatestOrder } = useOrderStore();
-  const { customerUser, customerToken, setCustomerAuth } = useAuthStore();
+  const { customerUser, customerToken } = useAuthStore();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
@@ -45,18 +45,6 @@ export default function Checkout() {
     ...(customerToken ? { request: { headers: { Authorization: `Bearer ${customerToken}` } } } : {}),
     mutation: {
       onSuccess: (data) => {
-        // If the backend created a guest account, auto-login
-        if (data.guestToken && data.customerEmail && !customerUser) {
-          setCustomerAuth(data.guestToken, {
-            email: data.customerEmail,
-            name: data.customerName,
-          });
-          toast({
-            title: "Account created!",
-            description: "Your order is placed and your account is ready. You can track orders anytime.",
-            duration: 4000,
-          });
-        }
         setLatestOrder(data);
         clearCart();
         setLocation(`/order/${data._id}`);
