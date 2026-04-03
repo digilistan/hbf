@@ -134,6 +134,40 @@ export default function AdminOrderDetail() {
               <a href={`tel:${order.customerPhone}`}><Phone className="w-4 h-4 mr-2" /> Call Customer</a>
             </Button>
           </div>
+          
+          <div className="bg-card rounded-2xl shadow-sm border p-6">
+            <h2 className="text-xl font-bold mb-4 border-b pb-2 flex items-center justify-between">
+               Payment Info
+               <Badge variant={order.paymentMethod === "Manual Bank Transfer" ? "secondary" : "outline"} className="ml-2">
+                 {order.paymentMethod}
+               </Badge>
+            </h2>
+            {order.paymentMethod === "Manual Bank Transfer" ? (
+               <div className="space-y-4">
+                 <div>
+                   <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-1">Transaction ID</p>
+                   <p className="font-mono bg-muted/50 p-2 rounded-lg text-foreground border">{order.transactionId || "N/A"}</p>
+                 </div>
+                 {order.paymentScreenshot && (
+                    <div>
+                      <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-2">Screenshot</p>
+                      <a href={(import.meta.env.VITE_API_BASE_URL || "/api").replace("/api", "") + order.paymentScreenshot} target="_blank" rel="noreferrer" className="block relative group overflow-hidden rounded-xl border-2 hover:border-primary transition-all">
+                        <img 
+                          src={(import.meta.env.VITE_API_BASE_URL || "/api").replace("/api", "") + order.paymentScreenshot} 
+                          alt="Payment receipt" 
+                          className="w-full h-auto object-cover max-h-48 group-hover:scale-105 transition-transform duration-300" 
+                        />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-bold text-sm">
+                           Click to Enlarge
+                        </div>
+                      </a>
+                    </div>
+                 )}
+               </div>
+            ) : (
+               <p className="text-muted-foreground">Standard Cash on Delivery.</p>
+            )}
+          </div>
         </div>
       </div>
     </AdminLayout>

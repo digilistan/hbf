@@ -2,7 +2,7 @@ import { MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
 export function WhatsAppChat() {
-  const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER as string;
+  const whatsappNumber = (import.meta.env.VITE_WHATSAPP_NUMBER as string) || "923159408619";
   const message = encodeURIComponent("Hello, I have a question about my order.");
 
   return (

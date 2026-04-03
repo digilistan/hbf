@@ -1,19 +1,51 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { ShoppingBag, User, Phone, MapPin, Menu, X, LogOut } from "lucide-react";
+import { ShoppingBag, User, Phone, MapPin, Menu, X, LogOut, KeyRound } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useCartStore, useAuthStore } from "@/store";
 import { CartDrawer } from "@/components/CartDrawer";
 import { WhatsAppChat } from "@/components/WhatsAppChat";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
 export function PublicLayout({ children }: { children: ReactNode }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const itemsCount = useCartStore((s) => s.items.reduce((acc, i) => acc + i.quantity, 0));
   const setIsOpen = useCartStore((s) => s.setIsOpen);
-  const { customerUser, logoutCustomer } = useAuthStore();
+  const { customerUser, customerToken, logoutCustomer } = useAuthStore();
   const [location, setLocation] = useLocation();
+  const { toast } = useToast();
+
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || "/api";
+      const res = await fetch(`${baseUrl}/customers/me/password`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${customerToken}` },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      toast({ title: "Password Updated!" });
+      setPasswordModalOpen(false);
+      setCurrentPassword("");
+      setNewPassword("");
+    } catch {
+      toast({ title: "Failed to update password", variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -32,7 +64,12 @@ export function PublicLayout({ children }: { children: ReactNode }) {
         <div className="flex items-center gap-4">
           {customerUser ? (
             <div className="flex items-center gap-4">
-              <Link href="/account/orders" className="hover:text-white transition-colors">My Orders</Link>
+              <Link href="/account/orders" className="hover:text-white transition-colors flex items-center gap-1">
+                <ShoppingBag className="w-3 h-3" /> Orders
+              </Link>
+              <button onClick={() => setPasswordModalOpen(true)} className="hover:text-white transition-colors flex items-center gap-1">
+                <KeyRound className="w-3 h-3" /> Password
+              </button>
               <button onClick={logoutCustomer} className="hover:text-white transition-colors flex items-center gap-1">
                 <LogOut className="w-3 h-3" /> Logout
               </button>
@@ -137,19 +174,43 @@ export function PublicLayout({ children }: { children: ReactNode }) {
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm">
           <p className="text-gray-500">&copy; {new Date().getFullYear()} Haq Bahoo Foods (HBF). All rights reserved.</p>
-          <a
-            href="https://digilistan.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-600 hover:text-gray-400 transition-colors text-xs font-medium tracking-wide"
-          >
-            Powered by <span className="text-primary font-bold">Digilistan</span>
-          </a>
+          <div className="flex flex-col items-center sm:items-end text-center sm:text-right mt-4 sm:mt-0 gap-1">
+            <a
+              href="https://digilistan.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group text-gray-500 hover:text-gray-300 transition-colors text-xs font-medium tracking-wide flex flex-col"
+            >
+              <span>Built by <span className="text-primary font-bold group-hover:underline">Digilistan</span> - A digital agency</span>
+              <span className="text-gray-600 font-bold mt-0.5">CEO, Muzammil - Digilistan</span>
+            </a>
+          </div>
         </div>
       </footer>
 
       <CartDrawer />
       <WhatsAppChat />
+
+      <Dialog open={passwordModalOpen} onOpenChange={setPasswordModalOpen}>
+        <DialogContent className="sm:max-w-md rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">Update Password</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handlePasswordReset} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Current Password</Label>
+              <Input required type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} className="rounded-xl h-12" />
+            </div>
+            <div className="space-y-2">
+              <Label>New Password</Label>
+              <Input required type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="rounded-xl h-12" />
+            </div>
+            <Button disabled={isSubmitting} type="submit" className="w-full h-12 rounded-xl mt-4 text-lg">
+              {isSubmitting ? "Updating..." : "Update Password"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -23,6 +23,12 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     { href: "/admin/customers", label: "Customers", icon: Users },
   ];
 
+  const lockedItems = [
+    { label: "Analytics", icon: LayoutDashboard },
+    { label: "Promo Codes", icon: LayoutDashboard }, // using LayoutDashboard as a generic generic icon placeholder for now
+    { label: "Reviews", icon: LayoutDashboard },
+  ];
+
   return (
     <div className="min-h-screen bg-muted/30 flex flex-col md:flex-row">
       {/* Sidebar */}
@@ -55,6 +61,22 @@ export function AdminLayout({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
+          
+          <div className="pt-4 mt-4 border-t border-white/10">
+            <p className="px-4 text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2">Coming Soon</p>
+            {lockedItems.map((item, i) => (
+              <div 
+                key={i} 
+                className="flex items-center justify-between px-4 py-3 rounded-xl font-medium text-gray-500 cursor-not-allowed opacity-60"
+              >
+                <div className="flex items-center gap-3">
+                   <item.icon className="w-5 h-5" />
+                   {item.label}
+                </div>
+                <div className="text-[10px] bg-white/10 px-2 py-0.5 rounded font-bold">PRO</div>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="p-4 border-t border-white/10">

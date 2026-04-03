@@ -3,82 +3,8 @@ import { useGetMenu } from "@workspace/api-client-react";
 import { useCartStore } from "@/store";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Plus, Flame, Star, ShoppingBag, ArrowRight, Phone } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import type { MenuItem } from "@workspace/api-client-react";
-import { useState } from "react";
-
-function MenuItemCard({ item }: { item: MenuItem }) {
-  const addItem = useCartStore(s => s.addItem);
-  const { toast } = useToast();
-  const [imgError, setImgError] = useState(false);
-
-  const handleAdd = () => {
-    addItem({ ...item, itemId: item._id, quantity: 1 });
-    toast({
-      title: "Added to cart!",
-      description: `${item.name} added to your order.`,
-      duration: 2000,
-    });
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      className="bg-card rounded-2xl shadow-sm border border-border/50 hover:shadow-xl hover:border-primary/20 transition-all duration-300 flex flex-col h-full group overflow-hidden"
-    >
-      {/* Image */}
-      <div className="relative h-44 bg-gradient-to-br from-primary/10 to-accent/10 overflow-hidden shrink-0">
-        {item.imageUrl && !imgError ? (
-          <img
-            src={item.imageUrl}
-            alt={item.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            onError={() => setImgError(true)}
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <ShoppingBag className="w-12 h-12 text-primary/30" />
-          </div>
-        )}
-        {/* Badges */}
-        <div className="absolute top-2 left-2 flex gap-1">
-          {item.isBestSeller && (
-            <span className="flex items-center gap-1 bg-accent text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">
-              <Star className="w-3 h-3 fill-white" /> Best Seller
-            </span>
-          )}
-          {item.isSpicy && (
-            <span className="flex items-center gap-1 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">
-              <Flame className="w-3 h-3 fill-white" /> Spicy
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="flex flex-col flex-1 p-4">
-        <h3 className="font-bold text-base text-foreground leading-tight mb-1">{item.name}</h3>
-        {item.description && (
-          <p className="text-muted-foreground text-xs line-clamp-2 flex-1 mb-3">{item.description}</p>
-        )}
-        <div className="flex items-center justify-between mt-auto pt-3 border-t border-border/50">
-          <span className="font-display font-black text-lg text-primary">Rs. {item.price}</span>
-          <Button
-            onClick={handleAdd}
-            size="sm"
-            className="rounded-full bg-primary text-white hover:bg-primary/90 transition-all group-hover:scale-105 shadow-sm shadow-primary/20 h-8 px-3"
-          >
-            <Plus className="w-3.5 h-3.5 mr-1" /> Add
-          </Button>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
+import { Plus, Star, ShoppingBag, ArrowRight, Phone } from "lucide-react";
+import { MenuItemCard } from "@/components/MenuItemCard";
 
 export default function Home() {
   const { data: menuData, isLoading } = useGetMenu();
@@ -90,42 +16,50 @@ export default function Home() {
         <div className="absolute inset-0 z-0">
           <img
             src={`${import.meta.env.BASE_URL}images/hero-bg.png`}
-            alt="Delicious food"
-            className="w-full h-full object-cover"
+            alt="Delicious fast food variety at Haq Bahoo Foods (HBF) Lahore"
+            className="w-full h-full object-cover scale-105 blur-[2px] opacity-90 transition-transform duration-[10s]"
+            fetchPriority="high"
           />
-          <div className="absolute inset-0 hero-gradient"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-black/60 shadow-inner"></div>
         </div>
 
-        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto mt-16">
+        <div className="relative z-10 text-center px-4 max-w-5xl mx-auto mt-16">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.7 }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
           >
-            <span className="inline-block py-1.5 px-5 rounded-full bg-accent/20 text-accent font-bold tracking-widest text-sm uppercase mb-6 border border-accent/30 backdrop-blur-sm">
-              Lahore's Favorite Fast Food
-            </span>
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white font-display leading-[1.05] mb-6 drop-shadow-2xl">
-              CRAVING<br />
-              <span className="text-primary [-webkit-text-stroke:2px_white] drop-shadow-md">DELICIOUS?</span>
+            <div className="flex justify-center mb-6">
+              <span className="inline-flex items-center gap-2 py-1.5 px-5 rounded-full bg-primary/20 text-primary font-black tracking-widest text-xs uppercase border border-primary/30 backdrop-blur-md shadow-lg shadow-primary/10">
+                <Star className="w-4 h-4 fill-primary" /> Premium Taste • Fresh Ingredients
+              </span>
+            </div>
+            
+            <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-white font-display leading-[0.95] mb-6 drop-shadow-2xl flex flex-col items-center">
+              <span>UNFORGETTABLE</span>
+              <span className="text-primary italic [-webkit-text-stroke:2px_white] drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">FLAVORS</span>
             </h1>
-            <p className="text-xl md:text-2xl text-gray-300 font-medium mb-10 max-w-2xl mx-auto">
-              Burgers • Pizzas • Wings • BBQ
+            
+            <p className="text-xl md:text-2xl text-gray-200 font-medium mb-12 max-w-2xl mx-auto drop-shadow shadow-black/40">
+              The ultimate spot for 
+              <span className="text-white font-bold ml-1.5 border-b-2 border-primary pb-0.5">Burgers, Pizzas & BBQ</span> 
+              since 2012.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="lg" className="h-14 px-10 rounded-full text-lg font-bold bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/30 w-full sm:w-auto" asChild>
-                <a href="#menu">Order Online <ArrowRight className="ml-2 w-5 h-5" /></a>
+            
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-5">
+              <Button size="lg" className="h-16 px-12 rounded-2xl text-xl font-bold bg-primary hover:bg-primary/90 text-white shadow-2xl shadow-primary/40 w-full sm:w-auto hover:scale-105 transition-transform" asChild>
+                <a href="#menu">View Full Menu <ArrowRight className="ml-2 w-6 h-6" /></a>
               </Button>
-              <Button size="lg" variant="outline" className="h-14 px-8 rounded-full text-lg font-bold bg-white/10 text-white border-white/20 hover:bg-white hover:text-black backdrop-blur-md w-full sm:w-auto" asChild>
-                <a href="tel:03159408619"><Phone className="mr-2 w-5 h-5" /> Call 0315-9408619</a>
+              <Button size="lg" variant="outline" className="h-16 px-10 rounded-2xl text-xl font-bold bg-white/5 text-white border-white/20 hover:bg-white hover:text-black backdrop-blur-md w-full sm:w-auto transition-all" asChild>
+                <a href="tel:03159408619"><Phone className="mr-2 w-5 h-5" /> Order via Call</a>
               </Button>
             </div>
           </motion.div>
         </div>
 
-        {/* Decorative Wave */}
-        <div className="absolute bottom-0 left-0 right-0 w-full overflow-hidden leading-none z-10">
-          <svg className="relative block w-full h-[50px] md:h-[80px]" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+        {/* Decorative Wave Decoration */}
+        <div className="absolute bottom-[-1px] left-0 right-0 w-full overflow-hidden leading-none z-10">
+          <svg className="relative block w-full h-[60px] md:h-[100px]" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
             <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V95.8C59.71,118.08,130.83,123.6,190.7,109.11,234.9,98.34,278.4,76.5,321.39,56.44Z" className="fill-background"></path>
           </svg>
         </div>
@@ -153,7 +87,7 @@ export default function Home() {
             <>
               {/* Sticky Category Navigation */}
               <div className="flex overflow-x-auto pb-3 mb-12 gap-2 sticky top-[72px] sm:top-[88px] z-30 bg-background/95 backdrop-blur pt-4 border-b border-border/50 -mx-4 px-4">
-                {menuData.categories.map((cat) => (
+                {menuData?.categories?.map((cat) => (
                   <a
                     key={cat._id}
                     href={`#cat-${cat.slug}`}
@@ -177,7 +111,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {menuData.bestSellers.map(item => (
+                    {menuData?.bestSellers?.map(item => (
                       <MenuItemCard key={item._id} item={item} />
                     ))}
                   </div>
@@ -186,14 +120,14 @@ export default function Home() {
 
               {/* Category Sections */}
               <div className="space-y-20">
-                {menuData.categories.map((category) => (
+                {menuData?.categories?.map((category) => (
                   <div key={category._id} id={`cat-${category.slug}`} className="scroll-mt-36">
                     <div className="flex items-end justify-between mb-8 pb-4 border-b-2 border-primary/10">
                       <h2 className="text-3xl font-display font-black text-foreground">{category.name}</h2>
-                      <span className="text-muted-foreground text-sm font-medium">{category.items.length} items</span>
+                      <span className="text-muted-foreground text-sm font-medium">{category?.items?.length || 0} items</span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                      {category.items.map(item => (
+                      {category?.items?.map(item => (
                         <MenuItemCard key={item._id} item={item} />
                       ))}
                     </div>

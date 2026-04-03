@@ -93,6 +93,8 @@ export interface Order {
   area?: string;
   notes?: string;
   paymentMethod: string;
+  transactionId?: string;
+  paymentScreenshot?: string;
   status: OrderStatus;
   total: number;
   customerId?: string;
@@ -108,6 +110,9 @@ export interface CreateOrderRequest {
   customerAddress: string;
   area?: string;
   notes?: string;
+  paymentMethod: string;
+  transactionId?: string;
+  paymentScreenshot?: string;
 }
 
 export interface UpdateOrderStatusRequest {

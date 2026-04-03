@@ -73,6 +73,9 @@ export const CreateOrderBody = zod.object({
   customerAddress: zod.string(),
   area: zod.string().optional(),
   notes: zod.string().optional(),
+  paymentMethod: zod.string(),
+  transactionId: zod.string().optional(),
+  paymentScreenshot: zod.string().optional(),
 });
 
 /**

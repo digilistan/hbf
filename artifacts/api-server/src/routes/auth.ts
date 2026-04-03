@@ -110,4 +110,38 @@ router.post("/customers/login", async (req, res) => {
   }
 });
 
+import { customerAuthMiddleware, type CustomerJwtPayload } from "../middleware/auth.js";
+
+router.patch("/customers/me/password", customerAuthMiddleware, async (req, res) => {
+  try {
+    const customerTokenInfo = (req as unknown as { customer: CustomerJwtPayload }).customer;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      res.status(400).json({ error: "Current and new password are required" });
+      return;
+    }
+
+    const customer = await Customer.findById(customerTokenInfo.id);
+    if (!customer) {
+      res.status(404).json({ error: "Customer not found" });
+      return;
+    }
+
+    const valid = await bcrypt.compare(currentPassword, customer.passwordHash);
+    if (!valid) {
+      res.status(401).json({ error: "Invalid current password" });
+      return;
+    }
+
+    customer.passwordHash = await bcrypt.hash(newPassword, 10);
+    await customer.save();
+
+    res.json({ message: "Password updated successfully" });
+  } catch (err) {
+    req.log.error({ err }, "Failed to update password");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 export default router;

@@ -2,6 +2,7 @@ import { Router, Request } from "express";
 import jwt from "jsonwebtoken";
 import Order from "../models/Order.js";
 import MenuItem from "../models/MenuItem.js";
+import Customer from "../models/Customer.js";
 import { customerAuthMiddleware, CustomerJwtPayload } from "../middleware/auth.js";
 
 const router = Router();
@@ -15,6 +16,10 @@ router.post("/orders", async (req, res) => {
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       res.status(400).json({ error: "Items are required" });
+      return;
+    }
+    if (!customerEmail) {
+      res.status(400).json({ error: "Email is required for checkout" });
       return;
     }
     if (!customerName || !customerPhone || !customerAddress) {
@@ -59,12 +64,39 @@ router.post("/orders", async (req, res) => {
     // Resolve customerId from bearer token when the customer is logged in
     const authHeader = req.headers.authorization;
     let customerId: string | undefined;
+    let guestToken: string | undefined;
+
     if (authHeader?.startsWith("Bearer ")) {
       try {
         const payload = jwt.verify(authHeader.slice(7), JWT_SECRET) as CustomerJwtPayload;
         customerId = payload.id;
       } catch {
         // Invalid or expired token — treat request as unauthenticated
+      }
+    }
+
+    // Phase 2: If unauthenticated but customerEmail supplied, auto-create/lookup account
+    if (!customerId && customerEmail) {
+      try {
+        let customer = await Customer.findOne({ email: customerEmail.toLowerCase() });
+        if (!customer) {
+          customer = await Customer.create({
+            name: customerName,
+            email: customerEmail.toLowerCase(),
+          });
+        }
+        customerId = customer._id.toString();
+
+        // Generate guest token for automatic login on frontend
+        const payload: CustomerJwtPayload = {
+          id: customer._id.toString(),
+          email: customer.email,
+          name: customer.name,
+        };
+        guestToken = jwt.sign(payload, JWT_SECRET, { expiresIn: "30d" });
+      } catch (err) {
+        req.log.warn({ err }, "Guest auto-account lookup/creation failed");
+        // We continue with order placement even if account fails
       }
     }
 
@@ -94,6 +126,7 @@ router.post("/orders", async (req, res) => {
       total: order.total,
       customerId: order.customerId?.toString(),
       createdAt: (order as unknown as { createdAt: Date }).createdAt.toISOString(),
+      guestToken, // Return token so frontend can log them in
     });
   } catch (err) {
     req.log.error({ err }, "Failed to create order");

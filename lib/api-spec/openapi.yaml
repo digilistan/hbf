@@ -638,6 +638,10 @@ components:
           type: string
         paymentMethod:
           type: string
+        transactionId:
+          type: string
+        paymentScreenshot:
+          type: string
         status:
           $ref: "#/components/schemas/OrderStatus"
         total:
@@ -678,11 +682,18 @@ components:
           type: string
         notes:
           type: string
+        paymentMethod:
+          type: string
+        transactionId:
+          type: string
+        paymentScreenshot:
+          type: string
       required:
         - items
         - customerName
         - customerPhone
         - customerAddress
+        - paymentMethod
 
     UpdateOrderStatusRequest:
       type: object

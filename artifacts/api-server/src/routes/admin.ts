@@ -134,6 +134,54 @@ router.get("/admin/customers", async (req, res) => {
   }
 });
 
+router.post("/admin/customers", async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    if (!name || !email || !password) {
+      res.status(400).json({ error: "Name, email, and password are required" });
+      return;
+    }
+    const existing = await Customer.findOne({ email: email.toLowerCase() });
+    if (existing) {
+      res.status(400).json({ error: "Email already in use" });
+      return;
+    }
+    const passwordHash = await import("bcryptjs").then(bcrypt => bcrypt.hash(password, 10));
+    const customer = await Customer.create({ name, email, passwordHash });
+    res.status(201).json({
+      _id: customer._id.toString(),
+      name: customer.name,
+      email: customer.email,
+      orderCount: 0,
+      createdAt: (customer as unknown as { createdAt: Date }).createdAt.toISOString(),
+    });
+  } catch (err) {
+    req.log.error({ err }, "Failed to create customer");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.patch("/admin/customers/:id/password", async (req, res) => {
+  try {
+    const { password } = req.body;
+    if (!password) {
+      res.status(400).json({ error: "Password is required" });
+      return;
+    }
+    const customer = await Customer.findById(req.params["id"]);
+    if (!customer) {
+      res.status(404).json({ error: "Customer not found" });
+      return;
+    }
+    customer.passwordHash = await import("bcryptjs").then(bcrypt => bcrypt.hash(password, 10));
+    await customer.save();
+    res.json({ message: "Password updated successfully" });
+  } catch (err) {
+    req.log.error({ err }, "Failed to update customer password");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.get("/admin/categories", async (req, res) => {
   try {
     const cats = await Category.find().sort({ name: 1 }).lean();

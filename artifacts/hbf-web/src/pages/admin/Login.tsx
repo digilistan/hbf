@@ -74,6 +74,10 @@ export default function AdminLogin() {
             {isPending ? "Authenticating..." : "Login to Dashboard"}
           </Button>
         </form>
+
+        <p className="text-center text-muted-foreground text-[10px] mt-8 pt-6 border-t border-border/50">
+          Powered by <a href="https://digilistan.com" target="_blank" rel="noopener noreferrer" className="text-primary font-bold hover:underline">Digilistan</a>
+        </p>
       </div>
     </div>
   );

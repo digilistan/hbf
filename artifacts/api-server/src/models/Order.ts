@@ -18,6 +18,8 @@ export interface IOrder extends Document {
   area?: string;
   notes?: string;
   paymentMethod: string;
+  transactionId?: string;
+  paymentScreenshot?: string;
   status: OrderStatus;
   total: number;
   customerId?: mongoose.Types.ObjectId;
@@ -43,6 +45,8 @@ const OrderSchema = new Schema<IOrder>(
     area: { type: String, trim: true },
     notes: { type: String, trim: true },
     paymentMethod: { type: String, default: "Cash on Delivery" },
+    transactionId: { type: String, trim: true },
+    paymentScreenshot: { type: String },
     status: {
       type: String,
       enum: ["NEW", "IN_KITCHEN", "OUT_FOR_DELIVERY", "COMPLETED", "CANCELLED"],
