@@ -7,7 +7,7 @@ const router = Router();
 
 const storage = multer.diskStorage({
   destination: "uploads/",
-  filename: (_req, file, cb) => {
+  filename: (_req: any, file: any, cb: any) => {
     const ext = path.extname(file.originalname);
     const id = crypto.randomBytes(8).toString("hex");
     cb(null, `${id}${ext}`);
@@ -17,7 +17,7 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
-  fileFilter: (_req, file, cb) => {
+  fileFilter: (_req: any, file: any, cb: any) => {
     if (file.mimetype.startsWith("image/")) {
       cb(null, true);
     } else {
