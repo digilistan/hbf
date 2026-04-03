@@ -9,6 +9,7 @@ module.exports = {
         NODE_ENV: "production",
         PORT: 8080,
       },
+      env_file: ".env",
       log_date_format: "YYYY-MM-DD HH:mm Z",
       error_file: "./logs/api-error.log",
       out_file: "./logs/api-out.log",
