@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: "hbf-api",
-      script: "./artifacts/api-server/dist/index.js",
+      script: "./artifacts/api-server/dist/index.mjs",
       instances: "max", // Or a specific number like 2 for a small VPS
       exec_mode: "cluster",
       env: {
